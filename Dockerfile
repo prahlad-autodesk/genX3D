@@ -24,13 +24,17 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY backend/static/ ./static/
 
+# Copy CascadeStudio app
+COPY frontend/CascadeStudio/ /app/
+# Copy local node_modules into the image
+COPY frontend/CascadeStudio/node_modules /app/node_modules
+
 # --- Frontend: Install & Build CascadeStudio ---
 USER root
 WORKDIR /app/frontend/CascadeStudio
 COPY frontend/CascadeStudio/package*.json ./
 
 # Fix permissions for npm
-RUN npm install --unsafe-perm
 
 COPY frontend/CascadeStudio/ ./
 RUN npm run build || echo "Build failed but continuing..."
