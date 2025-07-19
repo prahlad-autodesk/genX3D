@@ -51,8 +51,8 @@ exporters.export(model, stl_path, exportType='STL')
 # Serve Cascade Studio static files at /app (not /) to avoid API conflicts
 # Update the path to the new frontend location
 CASCADE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/CascadeStudio"))
-app.mount("/app", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
-# Now access Cascade Studio at http://localhost:8000/app/
+app.mount("/", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
+# Now access Cascade Studio at http://localhost:8000/
 # API endpoints like /chat will work as expected
 
 # Serve STEP model
