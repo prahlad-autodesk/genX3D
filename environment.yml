@@ -1,0 +1,18 @@
+name: genx3d
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - fastapi
+  - uvicorn
+  - langchain
+  - langgraph
+  - langchain-openai
+  - cadquery
+  - pydantic
+  - jinja2
+  - python-dotenv
+  - starlette
+  - gunicorn
+  - pip
+  - pip: [] 
