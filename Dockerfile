@@ -4,6 +4,9 @@ FROM mambaorg/micromamba:1.5.7
 # Set work directory
 WORKDIR /app
 
+# Install OpenGL system libraries needed for CadQuery/OCP
+RUN apt-get update && apt-get install -y libgl1-mesa-glx && rm -rf /var/lib/apt/lists/*
+
 # Copy environment and source code
 COPY environment.yml ./
 COPY backend/ ./backend/
