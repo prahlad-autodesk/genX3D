@@ -1,0 +1,124 @@
+/* Add a black background color to the top navigation */
+.topnav {
+  background-color: #111;
+  overflow: hidden;
+}
+
+/* Style the links inside the navigation bar */
+.topnav a, .topnav label {
+  float: left;
+  color: #f2f2f2;
+  text-align: center;
+  padding: 4px 16px;
+  text-decoration: none;
+  font-size: 14px;
+  font-family: Consolas;
+}
+
+/* Change the color of links on hover */
+.topnav a:hover, .topnav label:hover {
+  background-color: #aaa;
+  color: black;
+}
+
+/* Add a color to the active/current link */
+.topnav a.active, label.active {
+  background-color: #4CAF50;
+  color: white;
+}
+.centered {
+  position: fixed; top: 10%; left: 25%; z-index: 1000;
+  width: 50%; height: 80%;
+  background: rgb(19, 19, 19); color: white;
+  overflow: auto;
+}
+
+/* TweakPane theme */
+:root {
+  --tp-font-family: Arial, sans-serif;
+  --tp-base-background-color: #2e2e2e;
+  --tp-button-background-color: hsl(0, 0%, 25%);
+  --tp-button-background-color-active: hsl(0, 0%, 40%);
+  --tp-button-background-color-focus: hsl(0, 0%, 35%);
+  --tp-button-background-color-hover: hsl(0, 0%, 30%);
+  --tp-button-foreground-color: #eeeeee;
+  --tp-label-foreground-color: #aeb5b8;
+}
+.gui-panel {
+  position: absolute;
+  right: 0;
+  max-height: 100%;
+  overflow-y: auto;
+}
+.gui-panel::-webkit-scrollbar {
+  width: 10px;
+  background: var(--tp-base-background-color);
+}
+.gui-panel::-webkit-scrollbar-thumb {
+  background: #777;
+}
+.tp-rotv {
+  text-shadow: 1px 1px #000;
+}
+.tp-rotv button {
+  text-shadow: inherit;
+}
+#chat-assistant-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  left: auto;
+  top: auto;
+  width: 340px;
+  max-height: 480px;
+  background: #232323;
+  color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif;
+  overflow: hidden;
+  border: 1px solid #444;
+}
+#chat-assistant-header {
+  background: #181818;
+  padding: 10px 16px;
+  font-weight: bold;
+  font-size: 16px;
+  border-bottom: 1px solid #333;
+}
+#chat-assistant-messages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+#chat-assistant-input-row {
+  display: flex;
+  border-top: 1px solid #333;
+  background: #202020;
+}
+#chat-assistant-input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  background: #232323;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+}
+#chat-assistant-send-btn {
+  background: #4CAF50;
+  color: #fff;
+  border: none;
+  padding: 0 18px;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 0 0 12px 0;
+  transition: background 0.2s;
+}
+#chat-assistant-send-btn:hover {
+  background: #388e3c;
+}

@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+langchain
+langgraph
+langchain-openai
+cadquery
+pydantic
+jinja2
+python-dotenv
+starlette
+gunicorn

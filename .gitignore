@@ -1,0 +1,48 @@
+ # Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node.js
+node_modules/
+frontend/CascadeStudio/node_modules/
+frontend/CascadeStudio/package-lock.json
+frontend/CascadeStudio/test/node_modules/
+frontend/CascadeStudio/test/package-lock.json
+
+# Environment
+debugenv/
+
+# Docker
+*.pid
+*.sock
+
+# Static models (optional, comment out if you want to track these)
+static/model.step
+static/model.stl
+
+# System
+Thumbs.db
+
+# Others
+*.bak
+*.swp

@@ -1,0 +1,112 @@
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Body
+
+import cadquery as cq
+from cadquery import exporters
+import os
+
+# LLM imports
+from langchain_openai import ChatOpenAI
+from langchain.schema import HumanMessage
+from backend.langgraph_app import run_graph
+
+app = FastAPI()
+
+# ✅ Enable CORS for frontend origin (e.g. Cascade Studio or local test)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to ["http://localhost:8001"] in prod
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Setup directories
+STATIC_DIR = "static"
+TEMPLATES_DIR = "templates"
+os.makedirs(STATIC_DIR, exist_ok=True)
+os.makedirs(TEMPLATES_DIR, exist_ok=True)
+
+# Mount static and templates
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+# File paths
+step_path = os.path.join(STATIC_DIR, "model.step")
+stl_path = os.path.join(STATIC_DIR, "model.stl")
+
+# === Create hollow cylinder ===
+outer = cq.Workplane("XY").circle(10).extrude(20)
+inner = cq.Workplane("XY").circle(6).extrude(20)
+model = outer.cut(inner)
+
+# Export STEP and STL
+exporters.export(model, step_path, exportType='STEP')
+exporters.export(model, stl_path, exportType='STL')
+
+# Serve Cascade Studio static files at /app (not /) to avoid API conflicts
+# Update the path to the new frontend location
+CASCADE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/CascadeStudio"))
+app.mount("/app", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
+# Now access Cascade Studio at http://localhost:8000/app/
+# API endpoints like /chat will work as expected
+
+# Serve STEP model
+@app.get("/model.step", response_class=FileResponse)
+def get_step():
+    return FileResponse(path=step_path, media_type='application/step', filename="model.step")
+
+# ✅ Serve STL model with CORS working
+@app.get("/model.stl", response_class=FileResponse)
+def get_stl():
+    return FileResponse(path=stl_path, media_type='application/sla', filename="model.stl")
+
+# === Chat endpoint for assistant ===
+from pydantic import BaseModel
+
+class ChatRequest(BaseModel):
+    message: str
+
+@app.post("/chat")
+async def chat_endpoint(body: ChatRequest):
+    # model_name = "mistralai/mixtral-8x7b"  # or any other model you want
+    llm = ChatOpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=os.getenv("OPENROUTER_API_KEY"),
+        # model=model_name,
+        # name=model_name,
+        max_completion_tokens=200,
+        temperature=0.7,
+        streaming=False
+    )
+    try:
+        response = await llm.ainvoke([HumanMessage(content=body.message)])
+        reply = response.content if hasattr(response, 'content') else str(response)
+    except Exception as e:
+        reply = f"[Error from LLM: {e}]"
+    return JSONResponse({"reply": reply})
+
+# @app.post("/graph_chat")
+# async def graph_chat_endpoint(body: ChatRequest):
+#     result = await run_graph({"message": body.message})
+#     return result
+
+# Endpoint to trigger the graph
+@app.post("/graph_chat")
+async def graph_chat_endpoint(body: ChatRequest):
+    try:
+        result = await run_graph({"message": body.message})
+        return {
+            "success": True,
+            "intent": result.get("next"),
+            "response": result.get("result"),
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+        }
