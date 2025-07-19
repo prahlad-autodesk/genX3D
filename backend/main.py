@@ -5,8 +5,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Body
 
-import cadquery as cq
-from cadquery import exporters
+# import cadquery as cq
+# from cadquery import exporters
 import os
 
 # LLM imports
@@ -40,19 +40,19 @@ step_path = os.path.join(STATIC_DIR, "model.step")
 stl_path = os.path.join(STATIC_DIR, "model.stl")
 
 # === Create hollow cylinder ===
-outer = cq.Workplane("XY").circle(10).extrude(20)
-inner = cq.Workplane("XY").circle(6).extrude(20)
-model = outer.cut(inner)
+# outer = cq.Workplane("XY").circle(10).extrude(20)
+# inner = cq.Workplane("XY").circle(6).extrude(20)
+# model = outer.cut(inner)
 
 # Export STEP and STL
-exporters.export(model, step_path, exportType='STEP')
-exporters.export(model, stl_path, exportType='STL')
+# exporters.export(model, step_path, exportType='STEP')
+# exporters.export(model, stl_path, exportType='STL')
 
 # Serve Cascade Studio static files at /app (not /) to avoid API conflicts
 # Update the path to the new frontend location
 CASCADE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend/CascadeStudio"))
-app.mount("/", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
-# Now access Cascade Studio at http://localhost:8000/
+app.mount("/app", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
+# Now access Cascade Studio at http://localhost:8000/app/
 # API endpoints like /chat will work as expected
 
 # Serve STEP model

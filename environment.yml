@@ -8,11 +8,12 @@ dependencies:
   - langchain
   - langgraph
   - langchain-openai
-  - cadquery
+  # - cadquery=2.3.0
   - pydantic
   - jinja2
   - python-dotenv
   - starlette
   - gunicorn
   - pip
-  - pip: [] 
+  - pip:
+    - langchain_community
