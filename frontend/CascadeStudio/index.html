@@ -10,48 +10,6 @@
         <meta name="viewport"           content="width=device-width, initial-scale=1.0">
         <meta name="theme-color"        content="#1e1e1e">
 
-        <!-- for loading cadquery -->
-
-        <script src="https://threejs.org/examples/js/loaders/STLLoader.js"></script>
-        <script>
-            async function loadExternalSTLModel() {
-                const modelURL = "http://localhost:8000/model.stl"; // Backend STL endpoint
-        
-                try {
-                    const response = await fetch(modelURL);
-                    debugger;
-                    if (!response.ok) throw new Error("Failed to fetch STL model");
-        
-                    const blob = await response.blob();
-                    const arrayBuffer = await blob.arrayBuffer();
-        
-                    const loader = new THREE.STLLoader();
-                    const geometry = loader.parse(arrayBuffer);
-                    const material = new THREE.MeshNormalMaterial({ wireframe: false });
-        
-                    const mesh = new THREE.Mesh(geometry, material);
-                    mesh.position.set(0, 0, 0);
-        
-                    if (window.threejsViewport && threejsViewport.scene) {
-                        threejsViewport.scene.add(mesh);
-                        threejsViewport.render();
-                    } else {
-                        console.warn("Cascade Studio scene not ready. Retrying...");
-                        setTimeout(loadExternalSTLModel, 1000);
-                    }
-                } catch (err) {
-                    console.error("Error loading STL model:", err);
-                }
-            }
-        
-            // Try to load STL after slight delay to let Cascade initialize
-            setTimeout(loadExternalSTLModel, 2000);
-        </script>
-        
-
-
-
-        
         <!-- Include these early and directly so they happen first -->
         <script>
             // Install Cascade Studio as a Progressive Web App for Offline Access
