@@ -22,7 +22,8 @@ USER $MAMBA_USER
 COPY environment.yml ./
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
-COPY backend/static/ ./static/
+COPY static/ ./static/
+COPY docs/ ./docs/
 
 # Copy CascadeStudio app with node_modules
 COPY frontend/CascadeStudio/ /app/frontend/CascadeStudio/
@@ -36,6 +37,10 @@ WORKDIR /app/frontend/CascadeStudio
 # No npm install - just copy the files
 COPY frontend/CascadeStudio/ ./
 RUN npm run build || echo "Build failed but continuing..."
+
+# --- Documentation: Build Docusaurus ---
+WORKDIR /app/docs
+RUN npm install && npm run build || echo "Docs build failed but continuing..."
 
 # --- Backend: Conda setup ---
 USER $MAMBA_USER

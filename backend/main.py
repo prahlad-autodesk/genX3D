@@ -13,14 +13,25 @@ import os
 # LLM imports
 from langchain_openai import ChatOpenAI
 from langchain.schema import HumanMessage
-from backend.langgraph_app import run_graph
+try:
+    from backend.langgraph_app import run_graph
+except ImportError:
+    from langgraph_app import run_graph
 
 app = FastAPI()
 
 # ✅ Enable CORS for frontend origin (e.g. Cascade Studio or local test)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change to ["http://localhost:8001"] in prod
+    allow_origins=[
+        "http://localhost:8000",
+        "http://localhost:8001", 
+        "http://localhost:3000",
+        "https://*.onrender.com",
+        "https://*.vercel.app",
+        "https://*.netlify.app",
+        "https://genx3d.onrender.com/app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,6 +66,11 @@ CASCADE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../fronte
 app.mount("/app", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
 # Now access Cascade Studio at http://localhost:8000/app/
 # API endpoints like /chat will work as expected
+
+# Serve Documentation static files at /documentation
+DOCS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static/docs"))
+app.mount("/documentation", StaticFiles(directory=DOCS_DIR, html=True), name="documentation")
+# Access documentation at http://localhost:8000/documentation/
 
 # Serve STEP model
 @app.get("/model.step", response_class=FileResponse)
@@ -111,3 +127,14 @@ async def graph_chat_endpoint(body: ChatRequest):
             "success": False,
             "error": str(e),
         }
+
+# Redirect root to documentation
+@app.get("/")
+async def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/documentation/")
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "genx3D API is running"}

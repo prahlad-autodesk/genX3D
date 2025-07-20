@@ -49,7 +49,7 @@
     // Show loading indicator
     appendMessage('...', 'assistant');
     // Call backend endpoint
-    fetch('http://localhost:8000/graph_chat', {
+    fetch('https://genx3d.onrender.com/graph_chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })

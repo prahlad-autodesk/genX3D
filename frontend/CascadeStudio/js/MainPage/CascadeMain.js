@@ -209,7 +209,7 @@ function initialize(projectContent = null) {
                 }
 
                 gui = new Tweakpane.Pane({
-                    title: 'Cascade Control Panel',
+                    title: 'GenX3D Control Panel',
                     container: document.getElementById('guiPanel')
                 });
                 guiSeparatorAdded = false;
@@ -650,17 +650,17 @@ function isArrayLike(item) {
 }
 
 // Add a function to hide/show the code editor panel
-window.toggleCodeEditor = function(hide = false) {
-    if (!myLayout) return;
-    // Find the code editor component
-    const codeEditor = myLayout.root.getItemsByFilter(item => item.config && item.config.componentName === 'codeEditor')[0];
-    if (codeEditor) {
-        if (hide) {
-            codeEditor.container.parent.close();
-        } else {
-            // Re-add the code editor if missing (requires more logic if fully removed)
-            // For now, reload the page to restore
-            location.reload();
-        }
-    }
-};
+// window.toggleCodeEditor = function(hide = false) {
+//     if (!myLayout) return;
+//     // Find the code editor component
+//     const codeEditor = myLayout.root.getItemsByFilter(item => item.config && item.config.componentName === 'codeEditor')[0];
+//     if (codeEditor) {
+//         if (hide) {
+//             codeEditor.container.parent.close();
+//         } else {
+//             // Re-add the code editor if missing (requires more logic if fully removed)
+//             // For now, reload the page to restore
+//             location.reload();
+//         }
+//     }
+// };

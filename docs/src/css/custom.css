@@ -1,0 +1,522 @@
+/**
+ * Any CSS included here will be global. The classic template
+ * bundles Infima by default. Infima is a CSS framework designed to
+ * work well for content-centric websites.
+ */
+
+/* You can override the default Infima variables here. */
+:root {
+  --ifm-color-primary: #2c3e50;
+  --ifm-color-primary-dark: #1a252f;
+  --ifm-color-primary-darker: #141e26;
+  --ifm-color-primary-darkest: #0e161c;
+  --ifm-color-primary-light: #34495e;
+  --ifm-color-primary-lighter: #4a6b8a;
+  --ifm-color-primary-lightest: #5d7a99;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+  
+  /* Cascade Studio theme colors */
+  --cascade-bg-primary: #111;
+  --cascade-bg-secondary: #232323;
+  --cascade-bg-tertiary: #181818;
+  --cascade-bg-panel: #2e2e2e;
+  --cascade-text-primary: #f2f2f2;
+  --cascade-text-secondary: #aeb5b8;
+  --cascade-border: #333;
+  --cascade-border-light: #444;
+  --cascade-hover: #aaa;
+  --cascade-active: #2c3e50;
+}
+
+/* For readability concerns, you should choose a lighter palette in dark mode. */
+[data-theme='dark'] {
+  --ifm-color-primary: #2c3e50;
+  --ifm-color-primary-dark: #1a252f;
+  --ifm-color-primary-darker: #141e26;
+  --ifm-color-primary-darkest: #0e161c;
+  --ifm-color-primary-light: #34495e;
+  --ifm-color-primary-lighter: #4a6b8a;
+  --ifm-color-primary-lightest: #5d7a99;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+  
+  /* Dark theme overrides */
+  --ifm-background-color: #111;
+  --ifm-background-surface-color: #232323;
+  --ifm-color-content: #ffffff;
+  --ifm-color-content-secondary: #d1d5db;
+  --ifm-navbar-background-color: #111;
+  --ifm-footer-background-color: #181818;
+  --ifm-card-background-color: #232323;
+  --ifm-toc-border-color: #333;
+  --ifm-table-border-color: #333;
+  --ifm-table-stripe-background: #1a1a1a;
+}
+
+/* Global dark theme styling */
+[data-theme='dark'] body {
+  background-color: #111;
+  color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar styling to match Cascade Studio */
+[data-theme='dark'] .navbar {
+  background-color: #111 !important;
+  border-bottom: 1px solid #333;
+}
+
+[data-theme='dark'] .navbar__brand {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .navbar__item {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .navbar__item:hover {
+  background-color: #aaa !important;
+  color: #111 !important;
+}
+
+[data-theme='dark'] .navbar__item--active {
+  background-color: #2c3e50 !important;
+  color: #fff !important;
+}
+
+/* Sidebar styling */
+[data-theme='dark'] .theme-doc-sidebar-container {
+  background-color: #232323;
+  border-right: 1px solid #333;
+}
+
+[data-theme='dark'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link:hover {
+  background-color: #aaa;
+  color: #111;
+}
+
+[data-theme='dark'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link--active {
+  background-color: #2c3e50;
+  color: #fff;
+}
+
+/* Main content area */
+[data-theme='dark'] .main-wrapper {
+  background-color: #111;
+}
+
+[data-theme='dark'] .theme-doc-markdown {
+  color: #ffffff;
+}
+
+/* Cards and containers */
+[data-theme='dark'] .card {
+  background-color: #232323;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .card:hover {
+  border-color: #2c3e50;
+}
+
+/* Code blocks */
+[data-theme='dark'] .prism-code {
+  background-color: #2e2e2e !important;
+  color: #f2f2f2 !important;
+}
+
+[data-theme='dark'] .theme-code-block {
+  background-color: #2e2e2e;
+  border: 1px solid #333;
+}
+
+/* Footer */
+[data-theme='dark'] .footer {
+  background-color: #181818;
+  border-top: 1px solid #333;
+}
+
+[data-theme='dark'] .footer__link-item {
+  color: #aeb5b8;
+}
+
+[data-theme='dark'] .footer__link-item:hover {
+  color: #4a6b8a;
+}
+
+/* Buttons */
+[data-theme='dark'] .button {
+  background-color: #2c3e50;
+  color: #fff;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+[data-theme='dark'] .button:hover {
+  background-color: #1a252f;
+}
+
+[data-theme='dark'] .button--secondary {
+  background-color: transparent;
+  color: #ffffff;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .button--secondary:hover {
+  background-color: #aaa;
+  color: #111;
+}
+
+/* Tables */
+[data-theme='dark'] .theme-table {
+  background-color: #232323;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .theme-table th {
+  background-color: #2e2e2e;
+  color: #ffffff;
+  border-bottom: 1px solid #333;
+}
+
+[data-theme='dark'] .theme-table td {
+  border-bottom: 1px solid #333;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .theme-table tr:nth-child(even) {
+  background-color: #1a1a1a;
+}
+
+/* Links */
+[data-theme='dark'] a {
+  color: #4a6b8a;
+}
+
+[data-theme='dark'] a:hover {
+  color: #4a6b8a;
+}
+
+/* Scrollbars */
+[data-theme='dark'] ::-webkit-scrollbar {
+  width: 10px;
+  background: #2e2e2e;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background: #777;
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-track {
+  background: #2e2e2e;
+}
+
+/* Search */
+[data-theme='dark'] .navbar__search-input {
+  background-color: #2e2e2e;
+  color: #f2f2f2;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .navbar__search-input::placeholder {
+  color: #aeb5b8;
+}
+
+/* Dropdown menus */
+[data-theme='dark'] .dropdown__menu {
+  background-color: #232323;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .dropdown__link {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .dropdown__link:hover {
+  background-color: #aaa;
+  color: #111;
+}
+
+/* Breadcrumbs */
+[data-theme='dark'] .breadcrumbs__item {
+  color: #aeb5b8;
+}
+
+[data-theme='dark'] .breadcrumbs__link {
+  color: #4a6b8a;
+}
+
+[data-theme='dark'] .breadcrumbs__link:hover {
+  color: #4a6b8a;
+}
+
+/* Pagination */
+[data-theme='dark'] .pagination-nav__link {
+  background-color: #232323;
+  border: 1px solid #333;
+  color: #ffffff;
+}
+
+[data-theme='dark'] .pagination-nav__link:hover {
+  border-color: #2c3e50;
+  background-color: #2e2e2e;
+}
+
+/* TOC */
+[data-theme='dark'] .table-of-contents {
+  background-color: #232323;
+  border-left: 1px solid #333;
+}
+
+[data-theme='dark'] .table-of-contents__link {
+  color: #aeb5b8;
+}
+
+[data-theme='dark'] .table-of-contents__link:hover {
+  color: #4a6b8a;
+}
+
+[data-theme='dark'] .table-of-contents__link--active {
+  color: #4a6b8a;
+  border-left-color: #4a6b8a;
+}
+
+/* Admonitions */
+[data-theme='dark'] .admonition {
+  background-color: #232323;
+  border: 1px solid #333;
+}
+
+[data-theme='dark'] .admonition-heading {
+  color: #ffffff;
+}
+
+/* Light theme styles */
+[data-theme='light'] body {
+  background-color: #ffffff;
+  color: #2c3e50;
+  font-family: Arial, sans-serif;
+}
+
+[data-theme='light'] .navbar {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .navbar__brand {
+  color: #2c3e50 !important;
+}
+
+[data-theme='light'] .navbar__item {
+  color: #2c3e50 !important;
+}
+
+[data-theme='light'] .navbar__item:hover {
+  background-color: #f8f9fa !important;
+  color: #2c3e50 !important;
+}
+
+[data-theme='light'] .navbar__item--active {
+  background-color: #2c3e50 !important;
+  color: #fff !important;
+}
+
+[data-theme='light'] .theme-doc-sidebar-container {
+  background-color: #f8f9fa;
+  border-right: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link {
+  color: #2c3e50;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link:hover {
+  background-color: #e9ecef;
+  color: #2c3e50;
+}
+
+[data-theme='light'] .theme-doc-sidebar-item-category-level-1 > .theme-doc-sidebar-item-link--active {
+  background-color: #2c3e50;
+  color: #fff;
+}
+
+[data-theme='light'] .main-wrapper {
+  background-color: #ffffff;
+}
+
+[data-theme='light'] .theme-doc-markdown {
+  color: #2c3e50;
+}
+
+[data-theme='light'] .card {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .card:hover {
+  border-color: #2c3e50;
+}
+
+[data-theme='light'] .prism-code {
+  background-color: #f8f9fa !important;
+  color: #2c3e50 !important;
+}
+
+[data-theme='light'] .theme-code-block {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .footer {
+  background-color: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .footer__link-item {
+  color: #6c757d;
+}
+
+[data-theme='light'] .footer__link-item:hover {
+  color: #4a6b8a;
+}
+
+[data-theme='light'] .button {
+  background-color: #2c3e50;
+  color: #fff;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+[data-theme='light'] .button:hover {
+  background-color: #1a252f;
+}
+
+[data-theme='light'] .button--secondary {
+  background-color: transparent;
+  color: #2c3e50;
+  border: 1px solid #6c757d;
+}
+
+[data-theme='light'] .button--secondary:hover {
+  background-color: #e9ecef;
+  color: #2c3e50;
+}
+
+[data-theme='light'] .theme-table {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .theme-table th {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  border-bottom: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .theme-table td {
+  border-bottom: 1px solid #e9ecef;
+  color: #2c3e50;
+}
+
+[data-theme='light'] .theme-table tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+[data-theme='light'] a {
+  color: #4a6b8a;
+}
+
+[data-theme='light'] a:hover {
+  color: #2c3e50;
+}
+
+[data-theme='light'] ::-webkit-scrollbar {
+  width: 10px;
+  background: #f8f9fa;
+}
+
+[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: #adb5bd;
+}
+
+[data-theme='light'] ::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+
+[data-theme='light'] .navbar__search-input {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .navbar__search-input::placeholder {
+  color: #6c757d;
+}
+
+[data-theme='light'] .dropdown__menu {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .dropdown__link {
+  color: #2c3e50;
+}
+
+[data-theme='light'] .dropdown__link:hover {
+  background-color: #e9ecef;
+  color: #2c3e50;
+}
+
+[data-theme='light'] .breadcrumbs__item {
+  color: #6c757d;
+}
+
+[data-theme='light'] .breadcrumbs__link {
+  color: #4a6b8a;
+}
+
+[data-theme='light'] .breadcrumbs__link:hover {
+  color: #2c3e50;
+}
+
+[data-theme='light'] .pagination-nav__link {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+  color: #2c3e50;
+}
+
+[data-theme='light'] .pagination-nav__link:hover {
+  border-color: #2c3e50;
+  background-color: #f8f9fa;
+}
+
+[data-theme='light'] .table-of-contents {
+  background-color: #f8f9fa;
+  border-left: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .table-of-contents__link {
+  color: #6c757d;
+}
+
+[data-theme='light'] .table-of-contents__link:hover {
+  color: #4a6b8a;
+}
+
+[data-theme='light'] .table-of-contents__link--active {
+  color: #4a6b8a;
+  border-left-color: #4a6b8a;
+}
+
+[data-theme='light'] .admonition {
+  background-color: #ffffff;
+  border: 1px solid #e9ecef;
+}
+
+[data-theme='light'] .admonition-heading {
+  color: #2c3e50;
+}
