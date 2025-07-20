@@ -4,11 +4,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Body
+import os
+from typing import List
 
 
 # import cadquery as cq
 # from cadquery import exporters
-import os
 
 # LLM imports
 from langchain_openai import ChatOpenAI
@@ -117,16 +118,42 @@ async def chat_endpoint(body: ChatRequest):
 async def graph_chat_endpoint(body: ChatRequest):
     try:
         result = await run_graph({"message": body.message})
+        # Map route to agent name
+        route = result.get("route") or result.get("next")
+        agent_map = {
+            "help": "HelpBot",
+            "generate": "GenBot",
+            "create_cad": "CADBot"
+        }
+        agent = agent_map.get(route, route)
         return {
             "success": True,
             "intent": result.get("next"),
             "response": result.get("result"),
+            "agent": agent,
         }
     except Exception as e:
         return {
             "success": False,
             "error": str(e),
         }
+
+# Endpoint to list generated models in static/generated_models
+@app.get("/list_generated_models")
+def list_generated_models():
+    models_dir = os.path.join("static", "generated_models")
+    allowed_ext = {".step", ".stl", ".glb"}
+    if not os.path.exists(models_dir):
+        return JSONResponse([])
+    files = []
+    for fname in os.listdir(models_dir):
+        ext = os.path.splitext(fname)[1].lower()
+        if ext in allowed_ext:
+            files.append({
+                "name": fname,
+                "url": f"/static/generated_models/{fname}"
+            })
+    return JSONResponse(files)
 
 # Redirect root to documentation
 @app.get("/")

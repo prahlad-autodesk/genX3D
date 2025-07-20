@@ -62,14 +62,29 @@ function initialize(projectContent = null) {
             content: [{
                 type: 'row',
                 content: [{
-                    type: 'component',
-                    componentName: 'codeEditor',
-                    title: '* Untitled',
-                    componentState: { code: codeStr },
-                    width: 50.0,
-                    isClosable: false
+                    type: 'column',
+                    width: 33.33, // 1/3 of the view
+                    content: [
+                        {
+                            type: 'component',
+                            componentName: 'codeEditor',
+                            title: '* Untitled',
+                            componentState: { code: codeStr },
+                            height: 70,
+                            isClosable: false
+                        },
+                        {
+                            type: 'component',
+                            componentName: 'modelBrowser',
+                            title: 'Model Browser',
+                            componentState: {},
+                            height: 30,
+                            isClosable: false
+                        }
+                    ]
                 }, {
                     type: 'column',
+                    width: 66.67, // 2/3 of the view
                     content: [{
                         type: 'component',
                         componentName: 'cascadeView',
@@ -94,6 +109,91 @@ function initialize(projectContent = null) {
         });
 
     }
+
+    // Register the Model Browser component for GoldenLayout
+    myLayout.registerComponent('modelBrowser', function (container, state) {
+        const browserDiv = document.createElement('div');
+        browserDiv.style.height = '100%';
+        browserDiv.style.overflowY = 'auto';
+        browserDiv.style.padding = '16px 12px';
+        browserDiv.style.background = '#23272f';
+        browserDiv.style.fontSize = '1em';
+        browserDiv.style.borderRadius = '8px';
+        browserDiv.style.boxShadow = '0 1px 4px rgba(0,0,0,0.12)';
+        browserDiv.style.border = '1px solid #222';
+        browserDiv.style.margin = '8px 0 0 0';
+        browserDiv.innerHTML = '<b style="font-size:1.1em;color:#90caf9;letter-spacing:0.5px;">Available Models</b><div id="model-list" style="margin-top:10px;">Loading...</div>';
+        container.getElement().get(0).appendChild(browserDiv);
+
+        const listDiv = browserDiv.querySelector('#model-list');
+        listDiv.innerHTML = 'Loading...';
+        fetch('/list_generated_models')
+          .then(res => res.json())
+          .then(models => {
+            listDiv.innerHTML = '';
+            if (!models.length) {
+              listDiv.innerHTML = '<i style="color:#bbb;">No models found.</i>';
+              return;
+            }
+            models.forEach(model => {
+              const item = document.createElement('div');
+              item.innerText = model.name;
+              item.style.cursor = 'pointer';
+              item.style.padding = '8px 12px';
+              item.style.margin = '0 0 6px 0';
+              item.style.color = '#90caf9';
+              item.style.background = '#23272f';
+              item.style.borderRadius = '5px';
+              item.style.transition = 'background 0.15s, color 0.15s';
+              item.style.fontWeight = '500';
+              item.onmouseenter = () => {
+                item.style.background = '#1a1d23';
+                item.style.color = '#fff';
+              };
+              item.onmouseleave = () => {
+                item.style.background = '#23272f';
+                item.style.color = '#90caf9';
+              };
+              item.onmousedown = () => {
+                item.style.background = '#0d1117';
+              };
+              item.onmouseup = () => {
+                item.style.background = '#1a1d23';
+              };
+              item.onclick = () => {
+                // Fetch and load the model as if it was uploaded
+                fetch(model.url)
+                  .then(res => res.blob())
+                  .then(blob => {
+                    const ext = model.name.split('.').pop();
+                    const file = new File([blob], model.name, { type: blob.type });
+                    let fileInput = document.getElementById('genbot-model-input');
+                    if (!fileInput) {
+                      fileInput = document.createElement('input');
+                      fileInput.type = 'file';
+                      fileInput.id = 'genbot-model-input';
+                      fileInput.style.display = 'none';
+                      document.body.appendChild(fileInput);
+                    }
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+                    if (typeof loadFiles === 'function') {
+                      loadFiles('genbot-model-input');
+                    } else if (window.loadFiles) {
+                      window.loadFiles('genbot-model-input');
+                    } else {
+                      alert('Model loading function not found!');
+                    }
+                  });
+              };
+              listDiv.appendChild(item);
+            });
+          })
+          .catch(() => {
+            listDiv.innerHTML = '<i style="color:#bbb;">Failed to load model list.</i>';
+          });
+    });
 
     // Set up the Dockable Monaco Code Editor
     myLayout.registerComponent('codeEditor', function (container, state) {
@@ -219,6 +319,87 @@ function initialize(projectContent = null) {
                 messageHandlers["addCheckbox"]({ name: "Cache?", default: true });
                 messageHandlers["addCheckbox"]({ name: "GroundPlane?", default: true });
                 messageHandlers["addCheckbox"]({ name: "Grid?", default: true });
+                // Refined viewer controls: group Fit to View and Toggle Pan Mode buttons
+                // Create a folder/group for viewer controls
+                const viewerFolder = gui.addFolder({ title: 'Viewer Controls', expanded: true });
+                // Add custom-styled Fit to View button
+                const fitBtn = viewerFolder.addButton({
+                    title: '',
+                    label: 'Fit to View',
+                });
+                // Use controller_.view.button for Tweakpane v3+
+                const fitBtnEl = fitBtn.controller_ && fitBtn.controller_.view && fitBtn.controller_.view.button;
+                if (fitBtnEl) {
+                    fitBtnEl.style.background = '#4CAF50';
+                    fitBtnEl.style.color = '#fff';
+                    fitBtnEl.style.fontWeight = 'bold';
+                    fitBtnEl.style.fontSize = '16px';
+                    fitBtnEl.style.margin = '4px 8px 4px 0';
+                    fitBtnEl.style.padding = '8px 18px';
+                    fitBtnEl.style.borderRadius = '6px';
+                    fitBtnEl.style.border = 'none';
+                    fitBtnEl.style.cursor = 'pointer';
+                    fitBtnEl.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                }
+                fitBtn.on('click', () => {
+                    if (window.messageHandlers && typeof window.messageHandlers.fitToView === 'function') {
+                        window.messageHandlers.fitToView();
+                    }
+                });
+                // Add custom-styled Toggle Pan Mode button
+                const panBtn = viewerFolder.addButton({
+                    title: '',
+                    label: '🖐️ Pan Mode',
+                });
+                const panBtnEl = panBtn.controller_ && panBtn.controller_.view && panBtn.controller_.view.button;
+                if (panBtnEl) {
+                    panBtnEl.style.background = '#2196F3';
+                    panBtnEl.style.color = '#fff';
+                    panBtnEl.style.fontWeight = 'bold';
+                    panBtnEl.style.fontSize = '16px';
+                    panBtnEl.style.margin = '4px 0 4px 8px';
+                    panBtnEl.style.padding = '8px 18px';
+                    panBtnEl.style.borderRadius = '6px';
+                    panBtnEl.style.border = 'none';
+                    panBtnEl.style.cursor = 'pointer';
+                    panBtnEl.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+                }
+                panBtn.on('click', () => {
+                    if (window.messageHandlers && typeof window.messageHandlers.togglePanMode === 'function') {
+                        window.messageHandlers.togglePanMode();
+                    }
+                });
+                // Add view buttons (Top, Front, Side, Isometric)
+                const viewNames = [
+                    { label: 'Top', value: 'top' },
+                    { label: 'Front', value: 'front' },
+                    { label: 'Side', value: 'side' },
+                    { label: 'Isometric', value: 'iso' }
+                ];
+                viewNames.forEach(view => {
+                    const btn = viewerFolder.addButton({
+                        title: '',
+                        label: view.label,
+                    });
+                    const btnEl = btn.controller_ && btn.controller_.view && btn.controller_.view.button;
+                    if (btnEl) {
+                        btnEl.style.background = '#fff';
+                        btnEl.style.color = '#333';
+                        btnEl.style.fontWeight = 'bold';
+                        btnEl.style.fontSize = '15px';
+                        btnEl.style.margin = '4px 8px 4px 0';
+                        btnEl.style.padding = '7px 16px';
+                        btnEl.style.borderRadius = '6px';
+                        btnEl.style.border = '1px solid #bbb';
+                        btnEl.style.cursor = 'pointer';
+                        btnEl.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)';
+                    }
+                    btn.on('click', () => {
+                        if (window.messageHandlers && typeof window.messageHandlers.setView === 'function') {
+                            window.messageHandlers.setView(view.value);
+                        }
+                    });
+                });
                 userGui = true;
                 // Remove any existing Transform Handles that could be laying around
                 threejsViewport.clearTransformHandles();
@@ -415,7 +596,8 @@ function initialize(projectContent = null) {
     myLayout.updateSize(window.innerWidth, window.innerHeight -
         document.getElementById('topnav').offsetHeight);
     // Automatically hide the code editor panel on load
-    setTimeout(() => { window.toggleCodeEditor(true); }, 500);
+    // Remove or comment out the call to window.toggleCodeEditor to prevent errors
+    // setTimeout(() => { window.toggleCodeEditor(true); }, 500);
 
     // If the Main Page loads before the CAD Worker, register a 
     // callback to start the model evaluation when the CAD is ready.

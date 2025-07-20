@@ -24,6 +24,7 @@ COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY static/ ./static/
 COPY docs/ ./docs/
+COPY static/generated_models/ /app/static/generated_models/
 
 # Copy CascadeStudio app with node_modules
 COPY frontend/CascadeStudio/ /app/frontend/CascadeStudio/

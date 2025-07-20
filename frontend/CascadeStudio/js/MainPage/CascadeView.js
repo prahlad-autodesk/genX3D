@@ -375,29 +375,166 @@ var CascadeEnvironment = function (goldenContainer) {
   // Patch in the Handle Gizmo Code
   initializeHandleGizmos(this);
 
+  // Add a function to fit the loaded model into the view
+  this.fitToView = function() {
+    if (!this.mainObject || !this.environment.camera || !this.environment.controls) return;
+    // Compute bounding box of the main object
+    const box = new THREE.Box3().setFromObject(this.mainObject);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    // Set camera to frame the bounding box
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const fov = this.environment.camera.fov * (Math.PI / 180);
+    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+    cameraZ *= 1.5; // Add some padding
+    this.environment.camera.position.set(center.x, center.y, cameraZ + center.z);
+    this.environment.camera.lookAt(center.x, center.y, center.z);
+    this.environment.controls.target.copy(center);
+    this.environment.controls.update();
+    this.environment.viewDirty = true;
+  };
+
+  // Expose fitToView as a message handler
+  messageHandlers['fitToView'] = () => {
+    if (threejsViewport && typeof threejsViewport.fitToView === 'function') {
+      threejsViewport.fitToView();
+    }
+  };
+
+  // Add a function to pan the camera by a given delta
+  this.panCamera = function(dx, dy, dz) {
+    if (!this.environment.camera || !this.environment.controls) return;
+    // Move both camera position and controls target
+    this.environment.camera.position.x += dx;
+    this.environment.camera.position.y += dy;
+    this.environment.camera.position.z += dz;
+    this.environment.controls.target.x += dx;
+    this.environment.controls.target.y += dy;
+    this.environment.controls.target.z += dz;
+    this.environment.controls.update();
+    this.environment.viewDirty = true;
+  };
+
+  // Expose panCamera as a message handler
+  messageHandlers['panCamera'] = (delta) => {
+    if (threejsViewport && typeof threejsViewport.panCamera === 'function') {
+      // delta should be an object: {dx, dy, dz}
+      const { dx = 0, dy = 0, dz = 0 } = delta || {};
+      threejsViewport.panCamera(dx, dy, dz);
+    }
+  };
+
+  // Pan mode toggle
+  this.panMode = false;
+  this.togglePanMode = function(enable) {
+    this.panMode = (enable !== undefined) ? enable : !this.panMode;
+    // Optionally update UI or cursor
+    if (this.panMode) {
+      this.environment.renderer.domElement.style.cursor = 'grab';
+      if (this.environment.controls) {
+        this.environment.controls.enableRotate = false;
+        this.environment.controls.enablePan = true;
+      }
+    } else {
+      this.environment.renderer.domElement.style.cursor = '';
+      if (this.environment.controls) {
+        this.environment.controls.enableRotate = true;
+        this.environment.controls.enablePan = true;
+      }
+    }
+  };
+  messageHandlers['togglePanMode'] = (enable) => {
+    if (threejsViewport && typeof threejsViewport.togglePanMode === 'function') {
+      threejsViewport.togglePanMode(enable);
+    }
+  };
+
+  // Mouse drag for pan mode
+  let isPanning = false;
+  let lastPan = { x: 0, y: 0 };
+  this.environment.renderer.domElement.addEventListener('mousedown', (e) => {
+    if (this.panMode && e.button === 0) {
+      isPanning = true;
+      lastPan.x = e.clientX;
+      lastPan.y = e.clientY;
+      this.environment.renderer.domElement.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (isPanning && this.panMode) {
+      const dx = e.clientX - lastPan.x;
+      const dy = e.clientY - lastPan.y;
+      // Pan speed factor (adjust as needed)
+      const factor = 0.2;
+      // Pan in camera space
+      const camera = this.environment.camera;
+      const controls = this.environment.controls;
+      // Calculate right and up vectors
+      const right = new THREE.Vector3();
+      camera.getWorldDirection(right);
+      right.cross(camera.up).normalize();
+      const up = camera.up.clone().normalize();
+      // Move target and camera
+      const panOffset = right.multiplyScalar(-dx * factor).add(up.multiplyScalar(dy * factor));
+      camera.position.add(panOffset);
+      controls.target.add(panOffset);
+      controls.update();
+      this.environment.viewDirty = true;
+      lastPan.x = e.clientX;
+      lastPan.y = e.clientY;
+    }
+  });
+  window.addEventListener('mouseup', (e) => {
+    if (isPanning) {
+      isPanning = false;
+      this.environment.renderer.domElement.style.cursor = this.panMode ? 'grab' : '';
+    }
+  });
+
   this.animate();
   // Initialize the view in-case we're lazy rendering...
   this.environment.renderer.render(this.environment.scene, this.environment.camera);
+
+  // Add a method to set the camera view (move this higher in the constructor)
+  this.setView = function(view) {
+    const camera = this.environment.camera;
+    const controls = this.environment.controls;
+    console.log('setView called', view, camera, controls);
+    if (!camera || !controls) return;
+    let target = controls.target.clone();
+    // Compute current distance from camera to target
+    const distance = camera.position.clone().sub(target).length();
+
+    // Define direction vectors for each view
+    let dir;
+    switch(view) {
+      case 'top':    dir = new THREE.Vector3(0, 1, 0); break;
+      case 'front':  dir = new THREE.Vector3(0, 0, 1); break;
+      case 'side':   dir = new THREE.Vector3(1, 0, 0); break;
+      case 'iso':    dir = new THREE.Vector3(1, 1, 1).normalize(); break;
+      default:       dir = camera.position.clone().sub(target).normalize(); break;
+    }
+
+    // Set camera position at the same distance in the new direction
+    camera.position.copy(target).add(dir.multiplyScalar(distance));
+    camera.lookAt(target);
+    controls.target.copy(target);
+    controls.update();
+    this.environment.viewDirty = true;
+  };
+
+  // Expose setView as a message handler (keep this after the method)
+  messageHandlers['setView'] = (view) => {
+    if (threejsViewport && typeof threejsViewport.setView === 'function') {
+      threejsViewport.setView(view);
+    }
+  };
 }
 
-// Add a function to set the camera view
-function setView(view) {
-  if (!this.camera || !this.controls) return;
-  let pos, target = [0, 45, 0];
-  switch(view) {
-    case 'top':    pos = [0, 200, 0]; break;
-    case 'front':  pos = [0, 45, 200]; break;
-    case 'side':   pos = [200, 45, 0]; break;
-    case 'iso':    pos = [150, 100, 150]; break;
-    default:       pos = [50, 100, 150]; break;
-  }
-  this.camera.position.set(pos[0], pos[1], pos[2]);
-  this.controls.target.set(target[0], target[1], target[2]);
-  this.camera.lookAt(target[0], target[1], target[2]);
-  this.controls.update();
-  this.environment.viewDirty = true;
-}
-// Expose via message handler
-messageHandlers['setView'] = (view) => {
-  setView.call(threejsViewport, view);
-};
+// Ensure setView is accessible on window.messageHandlers
+window.messageHandlers = window.messageHandlers || {};
+window.messageHandlers.setView = messageHandlers['setView'];
+
+// Ensure global access to messageHandlers
+window.messageHandlers = messageHandlers;

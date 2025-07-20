@@ -49,7 +49,8 @@
     // Show loading indicator
     appendMessage('...', 'assistant');
     // Call backend endpoint
-    fetch('https://genx3d.onrender.com/graph_chat', {
+    // fetch('https://genx3d.onrender.com/graph_chat', {
+    fetch('http://127.0.0.1:8000/graph_chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })
@@ -61,7 +62,62 @@
       if (msgs.length > 0 && msgs[msgs.length-1].innerText.startsWith('Assistant: ...')) {
         messagesDiv.removeChild(msgs[msgs.length-1]);
       }
-      appendMessage(data.response || '[No response]', 'assistant');
+      // Show assistant message
+      let assistantMsg = '[No response]';
+      if (typeof data.response === 'string') {
+        assistantMsg = data.response;
+      } else if (typeof data.response === 'object' && data.response.text) {
+        assistantMsg = data.response.text;
+      }
+      appendMessage(assistantMsg, 'assistant');
+
+      // If GenBot or CADBot, load the model in the viewer
+      if ((data.agent === "GenBot" || data.agent === "CADBot") && data.response) {
+        let modelUrl = null;
+        let ext = 'stl';
+        // For GenBot, response is likely a string URL
+        if (typeof data.response === 'string') {
+          modelUrl = data.response;
+        } else if (typeof data.response === 'object' && data.response.model_url) {
+          modelUrl = data.response.model_url;
+          ext = data.response.model_type || 'stl';
+        }
+        if (modelUrl) {
+          fetch(modelUrl)
+            .then(res => res.blob())
+            .then(blob => {
+              // Guess file extension from MIME type or use ext
+              if (blob.type.includes('step')) ext = 'step';
+              else if (blob.type.includes('obj')) ext = 'obj';
+              const file = new File([blob], `ai_model.${ext}`, { type: blob.type });
+              // Create a hidden file input if not already present
+              let fileInput = document.getElementById('genbot-model-input');
+              if (!fileInput) {
+                fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = 'genbot-model-input';
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+              }
+              // Set up the input with the file
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(file);
+              fileInput.files = dataTransfer.files;
+              // Call the Cascade Studio loadFiles function
+              if (typeof loadFiles === 'function') {
+                loadFiles('genbot-model-input');
+              } else if (window.loadFiles) {
+                window.loadFiles('genbot-model-input');
+              } else {
+                console.error('loadFiles function not found!');
+              }
+              // After loading, fit the model to view
+              if (window.messageHandlers && typeof window.messageHandlers.fitToView === 'function') {
+                setTimeout(() => window.messageHandlers.fitToView(), 500);
+              }
+            });
+        }
+      }
     })
     .catch(err => {
       // Remove loading indicator

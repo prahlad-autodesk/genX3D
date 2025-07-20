@@ -57,7 +57,12 @@ async def generate_node(state: AppState) -> AppState:
 
 async def create_cad_node(state: AppState) -> AppState:
     message = state["message"]
-    response = f"🛠 CADBot: Creating a CAD model related to '{message}'. Here's a placeholder."
+    # Provide a URL to the STEP model for the frontend to load
+    response = {
+        "text": f"🛠 CADBot: Creating a CAD model related to '{message}'. Here is your model.",
+        "model_url": "/model.step",
+        "model_type": "step"
+    }
     return {**state, "result": response}
 
 # -----------------------------
