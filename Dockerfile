@@ -26,17 +26,11 @@ COPY static/ ./static/
 COPY docs/ ./docs/
 COPY static/generated_models/ /app/static/generated_models/
 
-# Copy CascadeStudio app with node_modules
-COPY frontend/CascadeStudio/ /app/frontend/CascadeStudio/
-# Copy local node_modules into the image
-COPY frontend/CascadeStudio/node_modules /app/frontend/CascadeStudio/node_modules
-
 # --- Frontend: Build CascadeStudio (no npm install) ---
 USER root
 WORKDIR /app/frontend/CascadeStudio
 
 # No npm install - just copy the files
-COPY frontend/CascadeStudio/ ./
 RUN npm run build || echo "Build failed but continuing..."
 
 # --- Documentation: Build Docusaurus ---

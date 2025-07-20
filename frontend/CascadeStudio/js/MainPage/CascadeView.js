@@ -530,6 +530,23 @@ var CascadeEnvironment = function (goldenContainer) {
       threejsViewport.setView(view);
     }
   };
+
+  // Add citation overlay to the viewport
+  let citationDiv = document.createElement('div');
+  citationDiv.innerText = 'Architect - Prahlad';
+  citationDiv.style.position = 'absolute';
+  citationDiv.style.bottom = '16px';
+  citationDiv.style.right = '24px';
+  citationDiv.style.background = 'rgba(34,34,34,0.85)';
+  citationDiv.style.color = '#f2f2f2';
+  citationDiv.style.fontSize = '1.1em';
+  citationDiv.style.fontFamily = 'Consolas, monospace';
+  citationDiv.style.padding = '6px 16px';
+  citationDiv.style.borderRadius = '8px';
+  citationDiv.style.zIndex = 1000;
+  citationDiv.style.pointerEvents = 'none';
+  // Attach to the golden layout container for the 3D view
+  this.goldenContainer.getElement().get(0).appendChild(citationDiv);
 }
 
 // Ensure setView is accessible on window.messageHandlers

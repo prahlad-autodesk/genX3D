@@ -127,7 +127,7 @@ function initialize(projectContent = null) {
 
         const listDiv = browserDiv.querySelector('#model-list');
         listDiv.innerHTML = 'Loading...';
-        fetch('/list_generated_models')
+        fetch('https://genx3d.onrender.com/list_generated_models')
           .then(res => res.json())
           .then(models => {
             listDiv.innerHTML = '';
@@ -162,7 +162,7 @@ function initialize(projectContent = null) {
               };
               item.onclick = () => {
                 // Fetch and load the model as if it was uploaded
-                fetch(model.url)
+                fetch('https://genx3d.onrender.com' + model.url)
                   .then(res => res.blob())
                   .then(blob => {
                     const ext = model.name.split('.').pop();
@@ -184,6 +184,10 @@ function initialize(projectContent = null) {
                       window.loadFiles('genbot-model-input');
                     } else {
                       alert('Model loading function not found!');
+                    }
+                    // Fit the model to view after loading
+                    if (window.messageHandlers && typeof window.messageHandlers.fitToView === 'function') {
+                      setTimeout(() => window.messageHandlers.fitToView(), 500);
                     }
                   });
               };

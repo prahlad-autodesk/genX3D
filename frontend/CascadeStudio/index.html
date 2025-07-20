@@ -77,6 +77,7 @@
             </label>
             <a href="#" title="Clears the external step/iges/stl files stored in the project." onmouseup="clearExternalFiles();">Clear Imported Files</a>
             <a href="#" id="load-step-backend" title="Load STEP from backend">Load STEP (Backend)</a>
+            <a href="#" id="fullscreen-toggle" title="Toggle Fullscreen">Fullscreen</a>
             <a href="/documentation" target="_blank" title="Open Documentation" style="background-color: #2c3e50; color: white; padding: 4px 16px; text-decoration: none; border-radius: 4px; border: 1px solid #34495e; transition: all 0.3s ease;" onmouseover="this.style.backgroundColor='#34495e'; this.style.borderColor='#4a6b8a';" onmouseout="this.style.backgroundColor='#2c3e50'; this.style.borderColor='#34495e';">📚 Docs</a>
             <button id="toggle-code-btn" style="margin-left:8px;">Hide Code</button>
         </div>
@@ -136,6 +137,32 @@
         }
         // Remove auto-hide on load
         // setTimeout(() => { window.toggleCodeEditor(true); }, 500);
+        const fullscreenBtn = document.getElementById('fullscreen-toggle');
+        fullscreenBtn.onclick = function(e) {
+            e.preventDefault();
+            const elem = document.documentElement;
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE/Edge */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        };
     });
     </script>
     </body>
