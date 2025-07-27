@@ -26,6 +26,9 @@ COPY static/ ./static/
 COPY docs/ ./docs/
 COPY static/generated_models/ /app/static/generated_models/
 
+# Copy .env file if it exists (will be used during runtime)
+COPY .env* ./
+
 # --- Frontend: Build CascadeStudio (no npm install) ---
 USER root
 WORKDIR /app/frontend/CascadeStudio

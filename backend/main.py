@@ -7,6 +7,14 @@ from fastapi import Body
 import os
 from typing import List
 
+# Load environment variables from .env file
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # If python-dotenv is not available, continue without it
+    pass
+
 
 # import cadquery as cq
 # from cadquery import exporters
