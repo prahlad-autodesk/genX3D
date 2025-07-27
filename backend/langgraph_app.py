@@ -15,13 +15,20 @@ class AppState(TypedDict):
 # -----------------------------
 # LLM Setup
 # -----------------------------
+# llm = ChatOpenAI(
+#     base_url="https://openrouter.ai/api/v1",
+#     api_key=os.getenv("OPENROUTER_API_KEY"),
+#     # model="mistralai/mixtral-8x7b",
+#     temperature=0.0,
+#     max_tokens=200,
+#     streaming=False
+# )
+
 llm = ChatOpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    # model="mistralai/mixtral-8x7b",
-    temperature=0.0,
-    max_tokens=200,
-    streaming=False
+    base_url="https://api.groq.com/openai/v1",  # Groq uses OpenAI-compatible API
+    api_key=os.getenv("GROQ_API_KEY"),          # Store key in .env for security
+    model="meta-llama/llama-4-scout-17b-16e-instruct",
+    name="groq-llama"
 )
 
 # -----------------------------

@@ -92,14 +92,21 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat_endpoint(body: ChatRequest):
     # model_name = "mistralai/mixtral-8x7b"  # or any other model you want
+    # llm = ChatOpenAI(
+    #     base_url="https://openrouter.ai/api/v1",
+    #     api_key=os.getenv("OPENROUTER_API_KEY"),
+    #     # model=model_name,
+    #     # name=model_name,
+    #     max_completion_tokens=200,
+    #     temperature=0.7,
+    #     streaming=False
+    # )
+
     llm = ChatOpenAI(
-        base_url="https://openrouter.ai/api/v1",
-        api_key=os.getenv("OPENROUTER_API_KEY"),
-        # model=model_name,
-        # name=model_name,
-        max_completion_tokens=200,
-        temperature=0.7,
-        streaming=False
+        base_url="https://api.groq.com/openai/v1",  # Groq uses OpenAI-compatible API
+        api_key=os.getenv("GROQ_API_KEY"),          # Store key in .env for security
+        model="meta-llama/llama-4-scout-17b-16e-instruct",
+        name="groq-llama"
     )
     try:
         response = await llm.ainvoke([HumanMessage(content=body.message)])
