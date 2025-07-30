@@ -3,72 +3,53 @@
 .gitignore
 
 # Python
-__pycache__
-*.pyc
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
 *.pyo
 *.pyd
-.Python
-env
-pip-log.txt
-pip-delete-this-directory.txt
-.tox
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
+*.sqlite3
+*.db
 *.log
-.git
-.mypy_cache
-.pytest_cache
-.hypothesis
 
-# Virtual environments
+# Jupyter
+.ipynb_checkpoints/
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Environment
+debugenv/
 genx3denv/
-venv/
-ENV/
-env/
-.venv/
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Docker
+*.pid
+*.sock
 
-# Documentation build artifacts
+# System
+Thumbs.db
+
+# Others
+*.bak
+*.swp
+
+# Temporary files
+temp_models/
+*.tmp
+
+# Documentation build artifacts (keep the built docs)
 docs/build/
 docs/node_modules/
 
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# Temporary files
-temp/
-*.tmp
-*.temp
-
-# Test files
-tests/
-test_*.py
-
-# Documentation
-DOCUMENTATION_INTEGRATION.md
-test_docs_integration.py
-
-# Deployment guides
-DOCKER_HUB.MD
-EC2.md 
+# Keep these important directories
+!frontend/CascadeStudio/node_modules/
+!static/docs/
+!static/generated_models/ 

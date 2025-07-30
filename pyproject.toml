@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "genx3d"
+version = "0.1.0"
+description = "AI-powered CAD model generation with RAG"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+packages = [{include = "backend"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.104.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+langchain = "^0.1.0"
+langchain-openai = "^0.0.5"
+langchain-core = "^0.1.0"
+langchain-anthropic = "^0.1.0"
+langchain-community = "^0.0.20"
+langgraph = "^0.0.20"
+sentence-transformers = "^2.2.2"
+pinecone-client = "^2.2.4"
+pinecone = "^7.3.0"
+faiss-cpu = "^1.7.4"
+pandas = "^2.0.0"
+pydantic = "^2.5.0"
+python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+black = "^23.0.0"
+flake8 = "^6.0.0"
+mypy = "^1.5.0"
+
+[tool.poetry.group.conda.dependencies]
+# These dependencies should be installed via conda
+# cadquery = "*"  # Commented out - install via conda
+# opencascade = "*"  # Commented out - install via conda
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+start-backend = "backend.main:app" 

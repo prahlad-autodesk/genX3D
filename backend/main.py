@@ -21,11 +21,8 @@ except ImportError:
 
 # LLM imports
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage
-try:
-    from backend.langgraph_app import run_graph
-except ImportError:
-    from langgraph_app import run_graph
+from langchain_core.messages import HumanMessage
+from langgraph_app import run_graph
 
 app = FastAPI()
 
@@ -36,10 +33,13 @@ app.add_middleware(
         "http://localhost:8000",
         "http://localhost:8001", 
         "http://localhost:3000",
+        "http://localhost:8080",  # Frontend server port
+        "http://127.0.0.1:8080",  # Frontend server IP
         "https://*.onrender.com",
         "https://*.vercel.app",
         "https://*.netlify.app",
-        "https://genx3d.onrender.com/app"
+        "https://genx3d.onrender.com/app",
+        "*"  # Allow all origins for development
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -78,8 +78,18 @@ app.mount("/app", StaticFiles(directory=CASCADE_DIR, html=True), name="cascade")
 
 # Serve Documentation static files at /documentation
 DOCS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../static/docs"))
-app.mount("/documentation", StaticFiles(directory=DOCS_DIR, html=True), name="documentation")
-# Access documentation at http://localhost:8000/documentation/
+if os.path.exists(DOCS_DIR):
+    app.mount("/documentation", StaticFiles(directory=DOCS_DIR, html=True), name="documentation")
+    print(f"✅ Documentation mounted at /documentation from {DOCS_DIR}")
+else:
+    print(f"⚠️ Documentation directory not found: {DOCS_DIR}")
+
+# Also serve docs at /docs for convenience
+if os.path.exists(DOCS_DIR):
+    app.mount("/docs", StaticFiles(directory=DOCS_DIR, html=True), name="docs")
+    print(f"✅ Documentation also available at /docs")
+
+# Access documentation at http://localhost:8000/documentation/ or http://localhost:8000/docs/
 
 # Serve STEP model
 @app.get("/model.step", response_class=FileResponse)
@@ -90,6 +100,35 @@ def get_step():
 @app.get("/model.stl", response_class=FileResponse)
 def get_stl():
     return FileResponse(path=stl_path, media_type='application/sla', filename="model.stl")
+
+# Serve temporary model files
+@app.get("/temp_models/{filename}")
+def get_temp_model(filename: str):
+    temp_models_dir = "temp_models"
+    file_path = os.path.join(temp_models_dir, filename)
+    
+    if not os.path.exists(file_path):
+        return JSONResponse({"error": "File not found"}, status_code=404)
+    
+    # Determine content type based on file extension
+    ext = os.path.splitext(filename)[1].lower()
+    content_type_map = {
+        '.step': 'application/step',
+        '.stl': 'application/sla',
+        '.glb': 'model/gltf-binary'
+    }
+    content_type = content_type_map.get(ext, 'application/octet-stream')
+    
+    return FileResponse(
+        path=file_path, 
+        media_type=content_type, 
+        filename=filename
+    )
+
+# Mount temp_models directory for static file serving
+TEMP_MODELS_DIR = "temp_models"
+os.makedirs(TEMP_MODELS_DIR, exist_ok=True)
+app.mount("/temp_models", StaticFiles(directory=TEMP_MODELS_DIR), name="temp_models")
 
 # === Chat endpoint for assistant ===
 from pydantic import BaseModel
@@ -138,7 +177,8 @@ async def graph_chat_endpoint(body: ChatRequest):
         agent_map = {
             "help": "HelpBot",
             "generate": "GenBot",
-            "create_cad": "CADBot"
+            "create_cad": "CADBot",
+            "code_gen": "GenBot"  # code_gen also creates models, so map to GenBot
         }
         agent = agent_map.get(route, route)
         return {
@@ -170,6 +210,47 @@ def list_generated_models():
             })
     return JSONResponse(files)
 
+# API information endpoint
+@app.get("/api/info")
+async def api_info():
+    """Get information about available API endpoints"""
+    return {
+        "name": "genx3D API",
+        "version": "1.0.0",
+        "description": "AI-powered CAD model generation with RAG and LangGraph",
+        "endpoints": {
+            "chat": {
+                "url": "/chat",
+                "method": "POST",
+                "description": "Simple chat with LLM"
+            },
+            "graph_chat": {
+                "url": "/graph_chat", 
+                "method": "POST",
+                "description": "Advanced chat with intelligent routing and CAD generation"
+            },
+            "health": {
+                "url": "/health",
+                "method": "GET", 
+                "description": "Health check endpoint"
+            },
+            "models": {
+                "url": "/list_generated_models",
+                "method": "GET",
+                "description": "List generated CAD models"
+            }
+        },
+        "documentation": {
+            "main": "/documentation/",
+            "alt": "/docs/",
+            "description": "Full API documentation and guides"
+        },
+        "frontend": {
+            "cascade_studio": "/app/",
+            "description": "3D CAD viewer and editor"
+        }
+    }
+
 # Redirect root to documentation
 @app.get("/")
 async def root():
@@ -179,4 +260,20 @@ async def root():
 # Health check endpoint
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "message": "genx3D API is running"}
+    return {
+        "status": "healthy", 
+        "message": "genx3D API is running",
+        "version": "1.0.0",
+        "features": [
+            "Hybrid RAG (Local FAISS + Pinecone)",
+            "LLM-powered CAD code generation", 
+            "Real-time 3D model creation",
+            "Intelligent routing system",
+            "Cascade Studio integration"
+        ],
+        "documentation": {
+            "available": os.path.exists(DOCS_DIR),
+            "path": DOCS_DIR,
+            "urls": ["/documentation/", "/docs/"]
+        }
+    }

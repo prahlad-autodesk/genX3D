@@ -161,6 +161,11 @@ docker pull ps2program/genx3d:latest
 ```
 
 
+## run docker locally
+
+# Run with .env file mounted
+docker run -p 8000:8000 --env-file .env genx3d:latest
+
 
 
 

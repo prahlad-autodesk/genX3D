@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/temp_models:/app/backend/temp_models
+    environment:
+      - PYTHONPATH=/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    image: node:18-alpine
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./frontend/CascadeStudio:/app
+    working_dir: /app
+    command: npx http-server . -p 8080 --cors
+    depends_on:
+      - backend
+
+  # Optional: Add a database service if needed
+  # postgres:
+  #   image: postgres:15
+  #   environment:
+  #     POSTGRES_DB: genx3d
+  #     POSTGRES_USER: genx3d
+  #     POSTGRES_PASSWORD: genx3d
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data: 

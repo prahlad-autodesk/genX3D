@@ -1,5 +1,7 @@
 # genx3D Documentation
 
+GenX3D (Generative + Experience + 3D — great for branding)
+
 This directory contains the comprehensive documentation for genx3D, a next-generation 3D CAD assistant platform.
 
 ## What is genx3D?

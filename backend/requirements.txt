@@ -9,3 +9,7 @@ jinja2
 python-dotenv
 starlette
 gunicorn
+sentence-transformers
+pinecone
+faiss-cpu
+pandas

@@ -1,19 +1,20 @@
 name: genx3d
 channels:
   - conda-forge
+  - cadquery
 dependencies:
   - python=3.11
-  - fastapi
-  - uvicorn
-  - langchain
-  - langgraph
-  - langchain-openai
-  # - cadquery=2.3.0
-  - pydantic
-  - jinja2
-  - python-dotenv
-  - starlette
-  - gunicorn
+  - cadquery
   - pip
   - pip:
-    - langchain_community
+    # Poetry will manage these, but we can specify versions here too
+    - fastapi>=0.104.0
+    - uvicorn[standard]>=0.24.0
+    - langchain>=0.1.0
+    - langchain-openai>=0.0.5
+    - langchain-core>=0.1.0
+    - langgraph>=0.0.20
+    - sentence-transformers>=2.2.2
+    - pinecone-client>=2.2.4
+    - pinecone>=7.3.0
+    - pydantic>=2.5.0

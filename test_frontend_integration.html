@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frontend Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; max-height: 300px; overflow-y: auto; }
+        input[type="text"] { width: 300px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Frontend Integration Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Test Backend Connection</h3>
+        <button onclick="testBackendConnection()">Test Backend Connection</button>
+        <div id="backend-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Model Generation</h3>
+        <input type="text" id="test-query" placeholder="Enter query (e.g., 'make a cylinder')" value="make a cylinder">
+        <button onclick="testModelGeneration()">Generate Model</button>
+        <div id="generation-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test File Download</h3>
+        <input type="text" id="test-url" placeholder="Enter model URL (e.g., /temp_models/model_xxx.step)">
+        <button onclick="testFileDownload()">Download File</button>
+        <div id="download-log" class="log"></div>
+    </div>
+
+    <script>
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        async function testBackendConnection() {
+            const logId = 'backend-log';
+            log(logId, 'Testing backend connection...');
+            
+            try {
+                const response = await fetch('http://localhost:8000/graph_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'test connection'
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(logId, '✅ Backend connection successful');
+                log(logId, `Response: ${JSON.stringify(data, null, 2)}`);
+                
+            } catch (error) {
+                log(logId, `❌ Backend connection failed: ${error.message}`);
+            }
+        }
+
+        async function testModelGeneration() {
+            const logId = 'generation-log';
+            const query = document.getElementById('test-query').value;
+            log(logId, `Testing model generation with query: "${query}"`);
+            
+            try {
+                const response = await fetch('http://localhost:8000/graph_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: query
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(logId, '✅ Model generation response received');
+                log(logId, `Full response: ${JSON.stringify(data, null, 2)}`);
+                
+                // Parse the response to get model URL
+                let responseData = data.response;
+                if (typeof data.response === 'string') {
+                    try {
+                        responseData = JSON.parse(data.response);
+                        log(logId, '✅ Parsed JSON response successfully');
+                    } catch (e) {
+                        log(logId, `❌ Failed to parse JSON: ${e.message}`);
+                        return;
+                    }
+                }
+                
+                if (responseData && responseData.step_url) {
+                    log(logId, `✅ Found STEP URL: ${responseData.step_url}`);
+                    document.getElementById('test-url').value = responseData.step_url;
+                } else {
+                    log(logId, '❌ No STEP URL found in response');
+                }
+                
+            } catch (error) {
+                log(logId, `❌ Model generation failed: ${error.message}`);
+            }
+        }
+
+        async function testFileDownload() {
+            const logId = 'download-log';
+            const url = document.getElementById('test-url').value;
+            
+            if (!url) {
+                log(logId, '❌ No URL provided');
+                return;
+            }
+            
+            log(logId, `Testing file download from: ${url}`);
+            
+            try {
+                // Construct full URL
+                let fullUrl = url;
+                if (url.startsWith('/')) {
+                    fullUrl = 'http://localhost:8000' + url;
+                }
+                
+                log(logId, `Full URL: ${fullUrl}`);
+                
+                const response = await fetch(fullUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                log(logId, `✅ File downloaded successfully`);
+                log(logId, `File size: ${blob.size} bytes`);
+                log(logId, `File type: ${blob.type}`);
+                
+                // Create a download link
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `test_model_${Date.now()}.step`;
+                a.textContent = 'Download Model File';
+                a.style.display = 'block';
+                a.style.marginTop = '10px';
+                a.style.padding = '5px';
+                a.style.backgroundColor = '#007bff';
+                a.style.color = 'white';
+                a.style.textDecoration = 'none';
+                a.style.borderRadius = '3px';
+                
+                const logElement = document.getElementById(logId);
+                logElement.appendChild(a);
+                
+            } catch (error) {
+                log(logId, `❌ File download failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,56 +1,52 @@
-FROM mambaorg/micromamba:1.5.7
+# Use conda base image for CadQuery support
+FROM continuumio/miniconda3:latest
 
-# Set workdir
+# Set working directory
 WORKDIR /app
 
-# Install system dependencies (graphics libs, Node.js, npm)
-USER root
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
     curl \
-    gnupg \
-    ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Switch to mamba user
-USER $MAMBA_USER
+# Copy conda environment file
+COPY environment.yml .
 
-# Copy environment and backend files
-COPY environment.yml ./
+# Create conda environment
+RUN conda env create -f environment.yml
+
+# Install Poetry
+RUN pip install poetry
+
+# Copy Poetry configuration files
+COPY pyproject.toml poetry.lock* ./
+
+# Copy application code
 COPY backend/ ./backend/
+
+# Copy frontend with custom node_modules (these contain unique packages not available on npm)
 COPY frontend/ ./frontend/
-COPY static/ ./static/
-COPY docs/ ./docs/
-COPY static/generated_models/ /app/static/generated_models/
 
-# Copy .env file if it exists (will be used during runtime)
-COPY .env* ./
-
-# --- Frontend: Build CascadeStudio (no npm install) ---
-USER root
-WORKDIR /app/frontend/CascadeStudio
-
-# No npm install - just copy the files
-RUN npm run build || echo "Build failed but continuing..."
-
-# --- Documentation: Build Docusaurus ---
-WORKDIR /app/docs
-RUN npm install && npm run build || echo "Docs build failed but continuing..."
-
-# --- Backend: Conda setup ---
-USER $MAMBA_USER
-WORKDIR /app
-
-RUN micromamba env create -f environment.yml -n genx3d
-ENV MAMBA_DOCKERFILE_ACTIVATE=1
+# Set environment variables
 ENV CONDA_DEFAULT_ENV=genx3d
-ENV PATH=/opt/conda/envs/genx3d/bin:$PATH
+ENV PATH="/opt/conda/envs/genx3d/bin:$PATH"
 
-# --- Expose API port ---
+# Install Python dependencies with Poetry
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-dev --no-interaction --no-ansi
+
+# Create temp_models directory
+RUN mkdir -p backend/temp_models
+
+# Verify frontend node_modules are present (these contain custom packages)
+RUN ls -la frontend/CascadeStudio/node_modules/ || echo "Warning: node_modules not found"
+
+# Expose port
 EXPOSE 8000
 
-# --- Start FastAPI backend using Gunicorn ---
-CMD ["gunicorn", "-k", "uvicorn.workers.UvicornWorker", "backend.main:app", "--bind", "0.0.0.0:8000", "--workers", "4"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# Run the application
+CMD ["poetry", "run", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CascadeStudio Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; max-height: 300px; overflow-y: auto; }
+        input[type="text"] { width: 300px; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>CascadeStudio Integration Test</h1>
+    
+    <div class="test-section">
+        <h3>1. Check Available Functions</h3>
+        <button onclick="checkFunctions()">Check Available Functions</button>
+        <div id="functions-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>2. Test Model Generation</h3>
+        <input type="text" id="test-query" placeholder="Enter query (e.g., 'make a cylinder')" value="make a cylinder">
+        <button onclick="testModelGeneration()">Generate Model</button>
+        <div id="generation-log" class="log"></div>
+    </div>
+    
+    <div class="test-section">
+        <h3>3. Test File Loading</h3>
+        <input type="text" id="test-url" placeholder="Enter model URL (e.g., /temp_models/model_xxx.step)">
+        <button onclick="testFileLoading()">Test File Loading</button>
+        <div id="loading-log" class="log"></div>
+    </div>
+
+    <script>
+        function log(elementId, message) {
+            const logElement = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}<br>`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+
+        function checkFunctions() {
+            const logId = 'functions-log';
+            log(logId, 'Checking available functions...');
+            
+            // Check for loadFiles function
+            if (typeof loadFiles === 'function') {
+                log(logId, '✅ loadFiles function found (direct)');
+            } else {
+                log(logId, '❌ loadFiles function not found (direct)');
+            }
+            
+            if (typeof window.loadFiles === 'function') {
+                log(logId, '✅ loadFiles function found (window)');
+            } else {
+                log(logId, '❌ loadFiles function not found (window)');
+            }
+            
+            // Check for clearExternalFiles function
+            if (typeof clearExternalFiles === 'function') {
+                log(logId, '✅ clearExternalFiles function found (direct)');
+            } else {
+                log(logId, '❌ clearExternalFiles function not found (direct)');
+            }
+            
+            if (typeof window.clearExternalFiles === 'function') {
+                log(logId, '✅ clearExternalFiles function found (window)');
+            } else {
+                log(logId, '❌ clearExternalFiles function not found (window)');
+            }
+            
+            // Check for cascadeStudioWorker
+            if (typeof cascadeStudioWorker !== 'undefined') {
+                log(logId, '✅ cascadeStudioWorker found');
+            } else {
+                log(logId, '❌ cascadeStudioWorker not found');
+            }
+            
+            // List all global functions
+            const globalFunctions = Object.keys(window).filter(key => typeof window[key] === 'function');
+            log(logId, `Global functions (${globalFunctions.length}): ${globalFunctions.slice(0, 10).join(', ')}${globalFunctions.length > 10 ? '...' : ''}`);
+        }
+
+        async function testModelGeneration() {
+            const logId = 'generation-log';
+            const query = document.getElementById('test-query').value;
+            log(logId, `Testing model generation with query: "${query}"`);
+            
+            try {
+                const response = await fetch('http://localhost:8000/graph_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: query
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                log(logId, '✅ Model generation response received');
+                log(logId, `Full response: ${JSON.stringify(data, null, 2)}`);
+                
+                // Parse the response to get model URL
+                let responseData = data.response;
+                if (typeof data.response === 'string') {
+                    try {
+                        responseData = JSON.parse(data.response);
+                        log(logId, '✅ Parsed JSON response successfully');
+                    } catch (e) {
+                        log(logId, `❌ Failed to parse JSON: ${e.message}`);
+                        return;
+                    }
+                }
+                
+                if (responseData && responseData.step_url) {
+                    log(logId, `✅ Found STEP URL: ${responseData.step_url}`);
+                    document.getElementById('test-url').value = responseData.step_url;
+                } else {
+                    log(logId, '❌ No STEP URL found in response');
+                }
+                
+            } catch (error) {
+                log(logId, `❌ Model generation failed: ${error.message}`);
+            }
+        }
+
+        async function testFileLoading() {
+            const logId = 'loading-log';
+            const url = document.getElementById('test-url').value;
+            
+            if (!url) {
+                log(logId, '❌ No URL provided');
+                return;
+            }
+            
+            log(logId, `Testing file loading from: ${url}`);
+            
+            try {
+                // Construct full URL
+                let fullUrl = url;
+                if (url.startsWith('/')) {
+                    fullUrl = 'http://localhost:8000' + url;
+                }
+                
+                log(logId, `Full URL: ${fullUrl}`);
+                
+                const response = await fetch(fullUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const blob = await response.blob();
+                log(logId, `✅ File downloaded successfully`);
+                log(logId, `File size: ${blob.size} bytes`);
+                log(logId, `File type: ${blob.type}`);
+                
+                // Create a file input element
+                const fileName = `test_model_${Date.now()}.step`;
+                const file = new File([blob], fileName, { type: blob.type });
+                
+                const uniqueId = `test-model-input-${Date.now()}`;
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.id = uniqueId;
+                fileInput.style.display = 'none';
+                document.body.appendChild(fileInput);
+                
+                // Set up the input with the file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                log(logId, `File input setup complete:`);
+                log(logId, `- File input ID: ${uniqueId}`);
+                log(logId, `- File input files length: ${fileInput.files.length}`);
+                log(logId, `- File name: ${fileInput.files[0]?.name}`);
+                log(logId, `- File size: ${fileInput.files[0]?.size}`);
+                
+                // Try to load the file
+                if (typeof loadFiles === 'function') {
+                    log(logId, 'Calling loadFiles function...');
+                    loadFiles(uniqueId);
+                    log(logId, '✅ loadFiles function called successfully');
+                } else if (typeof window.loadFiles === 'function') {
+                    log(logId, 'Calling loadFiles function via window...');
+                    window.loadFiles(uniqueId);
+                    log(logId, '✅ loadFiles function called successfully via window');
+                } else {
+                    log(logId, '❌ loadFiles function not available');
+                }
+                
+            } catch (error) {
+                log(logId, `❌ File loading failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html> 
