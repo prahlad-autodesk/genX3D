@@ -1,52 +1,78 @@
-# Use conda base image for CadQuery support
-FROM continuumio/miniconda3:latest
+########################
+# 1️⃣ Builder Stage
+########################
+FROM mambaorg/micromamba:1.5.8 AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
+# Install only what's needed for CadQuery/OpenCascade
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglu1-mesa \
+    libxrender1 \
+    libxi6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy conda environment file
-COPY environment.yml .
+# Create conda env
+COPY environment.yml /tmp/environment.yml
+RUN micromamba create -y -n genx3d -f /tmp/environment.yml -c conda-forge \
+    && micromamba install -y -n genx3d -c conda-forge cadquery pip \
+    && micromamba clean --all --yes
 
-# Create conda environment
-RUN conda env create -f environment.yml
-
-# Install Poetry
-RUN pip install poetry
-
-# Copy Poetry configuration files
-COPY pyproject.toml poetry.lock* ./
-
-# Copy application code
-COPY backend/ ./backend/
-
-# Copy frontend with custom node_modules (these contain unique packages not available on npm)
-COPY frontend/ ./frontend/
-
-# Set environment variables
-ENV CONDA_DEFAULT_ENV=genx3d
 ENV PATH="/opt/conda/envs/genx3d/bin:$PATH"
 
-# Install Python dependencies with Poetry
+# Install Poetry in env
+RUN pip install --no-cache-dir poetry
+
+# Copy only poetry files for cache
+COPY pyproject.toml poetry.lock* ./
+
+# Install dependencies (no dev)
 RUN poetry config virtualenvs.create false \
-    && poetry install --no-dev --no-interaction --no-ansi
+ && pip uninstall -y pinecone pinecone-client || true \
+ && (poetry install --only main --no-root --no-interaction --no-ansi \
+     || (poetry lock --no-update && poetry install --only main --no-root --no-interaction --no-ansi)) \
+ && pip install --no-cache-dir "ezdxf==0.17.2"
 
-# Create temp_models directory
-RUN mkdir -p backend/temp_models
+# Copy full app
+COPY backend/ backend/
+COPY frontend-react/build/ frontend-react/build/
+COPY frontend/CascadeStudio/ frontend/CascadeStudio/
 
-# Verify frontend node_modules are present (these contain custom packages)
-RUN ls -la frontend/CascadeStudio/node_modules/ || echo "Warning: node_modules not found"
+# Prepare runtime dir
+RUN mkdir -p backend/temp_models && chmod 755 backend/temp_models
 
-# Expose port
+########################
+# 2️⃣ Runtime Stage
+########################
+FROM python:3.11-slim AS runtime
+
+WORKDIR /app
+
+# Install only runtime OS deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglu1-mesa \
+    libxrender1 \
+    libxi6 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python env from builder
+COPY --from=builder /opt/conda/envs/genx3d /opt/conda/envs/genx3d
+
+ENV PATH="/opt/conda/envs/genx3d/bin:$PATH"
+ENV PYTHONPATH="/app/backend"
+
+# Copy only final app files from builder
+COPY --from=builder /app/backend /app/backend
+COPY --from=builder /app/frontend-react/build /app/frontend-react/build
+COPY --from=builder /app/frontend/CascadeStudio /app/frontend/CascadeStudio
+
+# Expose and healthcheck
 EXPOSE 8000
-
-# Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Run the application
-CMD ["poetry", "run", "uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run app
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

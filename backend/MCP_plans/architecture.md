@@ -1,0 +1,1 @@
+![Genx3D Architecture](image.png)

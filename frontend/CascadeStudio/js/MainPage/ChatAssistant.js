@@ -50,7 +50,8 @@
     appendMessage('...', 'assistant');
     // Call backend endpoint
     // fetch('https://genx3d.onrender.com/graph_chat', {
-    fetch('http://localhost:8000/graph_chat', {
+    // fetch('http://localhost:8000/graph_chat', {
+    fetch(window.getApiUrl ? window.getApiUrl('/graph_chat') : 'https://prahlad.blog/graph_chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: text })
@@ -148,7 +149,7 @@
           // Add base URL if it's a relative path
           if (modelUrl.startsWith('/')) {
             // Use backend server URL instead of frontend origin
-            modelUrl = 'http://localhost:8000' + modelUrl;
+            modelUrl = window.getModelUrl ? window.getModelUrl(modelUrl) : 'https://prahlad.blog' + modelUrl;
           }
           
           console.log('Final model URL to fetch:', modelUrl);

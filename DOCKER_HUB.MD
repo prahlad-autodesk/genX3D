@@ -127,6 +127,10 @@ docker tag genx3d ps2program/genx3d:v1.1.0
 # Push to Docker Hub
 docker push ps2program/genx3d:latest
 docker push ps2program/genx3d:v1.1.0
+
+# run docker container
+docker run -p 8000:8000 genx3d
+
 ```
 
 ## **🎉 Available Images:**

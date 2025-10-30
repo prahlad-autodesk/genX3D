@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Body
 import os
 from typing import List
+import atexit
 
 # Load environment variables from .env file
 try:
@@ -22,7 +23,9 @@ except ImportError:
 # LLM imports
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage
-from langgraph_app import run_graph
+# from langgraph_app import run_graph, cad_generator
+from graph.langgraph_app import run_graph, cad_generator
+
 
 app = FastAPI()
 
@@ -34,6 +37,7 @@ app.add_middleware(
         "http://localhost:8001", 
         "http://localhost:3000",
         "http://localhost:8080",  # Frontend server port
+        "http://127.0.0.1:8000",  # React app served from same server
         "http://127.0.0.1:8080",  # Frontend server IP
         "https://*.onrender.com",
         "https://*.vercel.app",
@@ -52,9 +56,62 @@ TEMPLATES_DIR = "templates"
 os.makedirs(STATIC_DIR, exist_ok=True)
 os.makedirs(TEMPLATES_DIR, exist_ok=True)
 
-# Mount static and templates
+# Define React build directory early for route handlers
+REACT_BUILD_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend-react/build"))
+
+# Handle React app's absolute asset paths by serving files directly (must come before /static mount)
+@app.get("/static/js/{filename}")
+def serve_react_js(filename: str):
+    if os.path.exists(REACT_BUILD_DIR):
+        js_path = os.path.join(REACT_BUILD_DIR, "static", "js", filename)
+        if os.path.exists(js_path):
+            return FileResponse(path=js_path, media_type='application/javascript', filename=filename)
+    return JSONResponse({"error": "JS file not found"}, status_code=404)
+
+@app.get("/static/css/{filename}")  
+def serve_react_css(filename: str):
+    if os.path.exists(REACT_BUILD_DIR):
+        css_path = os.path.join(REACT_BUILD_DIR, "static", "css", filename)
+        if os.path.exists(css_path):
+            return FileResponse(path=css_path, media_type='text/css', filename=filename)
+    return JSONResponse({"error": "CSS file not found"}, status_code=404)
+
+# Serve React app's manifest.json at root level
+@app.get("/manifest.json", response_class=FileResponse)
+def get_react_manifest():
+    if os.path.exists(REACT_BUILD_DIR):
+        manifest_path = os.path.join(REACT_BUILD_DIR, "manifest.json")
+        if os.path.exists(manifest_path):
+            return FileResponse(path=manifest_path, media_type='application/json', filename="manifest.json")
+    return JSONResponse({"error": "Manifest not found"}, status_code=404)
+
+# Serve React app's favicon and other assets at root level
+@app.get("/favicon.ico", response_class=FileResponse)
+def get_react_favicon():
+    if os.path.exists(REACT_BUILD_DIR):
+        favicon_path = os.path.join(REACT_BUILD_DIR, "favicon.ico")
+        if os.path.exists(favicon_path):
+            return FileResponse(path=favicon_path, media_type='image/x-icon', filename="favicon.ico")
+    return JSONResponse({"error": "Favicon not found"}, status_code=404)
+
+@app.get("/logo192.png", response_class=FileResponse)
+def get_react_logo192():
+    if os.path.exists(REACT_BUILD_DIR):
+        logo_path = os.path.join(REACT_BUILD_DIR, "logo192.png")
+        if os.path.exists(logo_path):
+            return FileResponse(path=logo_path, media_type='image/png', filename="logo192.png")
+    return JSONResponse({"error": "Logo not found"}, status_code=404)
+
+# Mount static and templates (backend static files)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+# Mount React app at /app2
+if os.path.exists(REACT_BUILD_DIR):
+    app.mount("/app2", StaticFiles(directory=REACT_BUILD_DIR, html=True), name="app2")
+    print(f"✅ React app mounted at /app2 from {REACT_BUILD_DIR}")
+else:
+    print(f"⚠️ React build directory not found: {REACT_BUILD_DIR}")
 
 # File paths
 step_path = os.path.join(STATIC_DIR, "model.step")
@@ -238,6 +295,16 @@ async def api_info():
                 "url": "/list_generated_models",
                 "method": "GET",
                 "description": "List generated CAD models"
+            },
+            "cleanup_stats": {
+                "url": "/cleanup/stats",
+                "method": "GET",
+                "description": "Get cleanup service statistics"
+            },
+            "cleanup_manual": {
+                "url": "/cleanup/manual",
+                "method": "POST",
+                "description": "Manually trigger cleanup of old files"
             }
         },
         "documentation": {
@@ -247,7 +314,8 @@ async def api_info():
         },
         "frontend": {
             "cascade_studio": "/app/",
-            "description": "3D CAD viewer and editor"
+            "react_app": "/app2/",
+            "description": "3D CAD viewer and editor interfaces"
         }
     }
 
@@ -277,3 +345,70 @@ async def health_check():
             "urls": ["/documentation/", "/docs/"]
         }
     }
+
+# Cleanup endpoints
+@app.get("/cleanup/stats")
+async def get_cleanup_stats():
+    """Get cleanup service statistics"""
+    try:
+        stats = cad_generator.get_cleanup_stats()
+        return {
+            "status": "success",
+            "cleanup_stats": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to get cleanup stats: {str(e)}"
+        }
+
+@app.post("/cleanup/manual")
+async def trigger_manual_cleanup():
+    """Manually trigger cleanup of old files"""
+    try:
+        stats = cad_generator.manual_cleanup()
+        return {
+            "status": "success",
+            "message": "Manual cleanup completed",
+            "cleanup_stats": stats
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Failed to trigger manual cleanup: {str(e)}"
+        }
+
+# Graceful shutdown handler
+@atexit.register
+def cleanup_on_exit():
+    """Stop cleanup service when application exits"""
+    try:
+        if hasattr(cad_generator, 'cleanup_service'):
+            cad_generator.cleanup_service.stop_cleanup_service()
+            print("🛑 Cleanup service stopped on application exit")
+    except Exception as e:
+        print(f"⚠️ Error stopping cleanup service on exit: {e}")
+
+# Register startup event handler for FastAPI
+@app.on_event("startup")
+async def startup_event():
+    """Handle FastAPI startup event"""
+    try:
+        if hasattr(cad_generator, 'cleanup_service'):
+            # Ensure cleanup service is running
+            if not cad_generator.cleanup_service.running:
+                cad_generator.cleanup_service.start_cleanup_service()
+            print("✅ Cleanup service started on FastAPI startup")
+    except Exception as e:
+        print(f"⚠️ Error starting cleanup service on startup: {e}")
+
+# Register shutdown event handler for FastAPI
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Handle FastAPI shutdown event"""
+    try:
+        if hasattr(cad_generator, 'cleanup_service'):
+            cad_generator.cleanup_service.stop_cleanup_service()
+            print("🛑 Cleanup service stopped on FastAPI shutdown")
+    except Exception as e:
+        print(f"⚠️ Error stopping cleanup service on shutdown: {e}")

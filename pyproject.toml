@@ -10,25 +10,28 @@ packages = [{include = "backend"}]
 python = "^3.9"
 fastapi = "^0.104.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
-langchain = "^0.1.0"
-langchain-openai = "^0.0.5"
-langchain-core = "^0.1.0"
-langchain-anthropic = "^0.1.0"
-langchain-community = "^0.0.20"
-langgraph = "^0.0.20"
+langchain = "^0.3.0"
+langchain-openai = "^0.2.0"
+langchain-core = "^0.3.0"
+langchain-anthropic = "^0.2.0"
+langchain-community = "^0.3.0"
+langgraph = "^0.2.0"
 sentence-transformers = "^2.2.2"
-pinecone-client = "^2.2.4"
 pinecone = "^7.3.0"
 faiss-cpu = "^1.7.4"
 pandas = "^2.0.0"
 pydantic = "^2.5.0"
 python-dotenv = "^1.0.0"
+jinja2 = "^3.1.0"
+aiofiles = "^23.0.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
 black = "^23.0.0"
 flake8 = "^6.0.0"
 mypy = "^1.5.0"
+httpx = "^0.25.0"
 
 [tool.poetry.group.conda.dependencies]
 # These dependencies should be installed via conda
@@ -39,5 +42,38 @@ mypy = "^1.5.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "backend"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
 [tool.poetry.scripts]
 start-backend = "backend.main:app" 
+test-cleanup = "backend.test_cleanup:main" 

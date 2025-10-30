@@ -3,7 +3,8 @@
 A next-generation 3D CAD assistant platform combining browser-based parametric modeling (Cascade Studio) with an AI-powered backend for chat, model generation, and analysis.
 
 ## Features
-- Web-based 3D CAD modeling (Cascade Studio)
+- **Modern React Frontend** (NEW!): Professional CAD interface with 3D viewer
+- Web-based 3D CAD modeling (Cascade Studio - legacy)
 - AI chat assistant (LLM-powered)
 - Intelligent routing system for different query types
 - Model generation, analysis, and help agents
@@ -16,7 +17,8 @@ A next-generation 3D CAD assistant platform combining browser-based parametric m
 ## Project Structure
 ```
 backend/           # FastAPI, LangGraph, LLM, CAD endpoints
-frontend/          # Cascade Studio static files
+frontend/          # Cascade Studio static files (legacy)
+frontend-react/    # Modern React-based frontend (NEW!)
 static/            # Exported models (STEP, STL)
 docs/              # Documentation
 Dockerfile         # Production build
@@ -45,7 +47,22 @@ The system uses intelligent routing to direct user queries to the most appropria
 - **🔍 RAG Integration**: Retrieves existing CADQuery code from knowledge base
 - **💻 RAG-Assisted Code Generation**: Creates custom CADQuery code using LLM with RAG examples
 - **🎯 Model Execution**: Executes generated code to create real STEP models
-- **📱 Frontend Integration**: Seamlessly loads generated models in CascadeStudio
+- **📱 Frontend Integration**: Seamlessly loads generated models in both React and CascadeStudio
+
+## Frontend Options
+
+### 🆕 React Frontend (Recommended)
+The new React-based frontend provides a modern, professional CAD interface:
+
+- **🎨 Modern UI**: Dark theme with professional CAD software aesthetics
+- **🔍 3D Viewer**: Interactive 3D visualization using Three.js
+- **💬 Chat Assistant**: Integrated AI chat interface
+- **🛠️ Toolbar**: Essential CAD tools and view controls
+- **📋 Model Explorer**: Sidebar for managing models and properties
+- **📱 Responsive**: Works on desktop and mobile devices
+
+### 📁 Legacy Cascade Studio
+The original Cascade Studio frontend is still available for users who prefer the traditional interface.
 
 ## Quick Start
 
@@ -92,7 +109,16 @@ python setup_llm.py
    poetry run uvicorn backend.main:app --reload --port 8000
    ```
 
-7. **Start the frontend:**
+7. **Start the frontend (choose one):**
+
+   **Option A: React Frontend (Recommended)**
+   ```bash
+   cd frontend-react
+   npm install
+   npm start
+   ```
+
+   **Option B: Legacy Cascade Studio**
    ```bash
    cd frontend/CascadeStudio
    npm start  # or http-server .

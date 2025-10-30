@@ -50,3 +50,17 @@ Thumbs.db
 # Others
 *.bak
 *.swp
+
+# frontend-react
+frontend-react/node_modules/
+frontend-react/package-lock.json
+
+# 3d models
+3d_models/
+3d_models/*
+
+*.step
+*.stl
+*.stp
+*.stpz
+*.stpz

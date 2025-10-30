@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom System Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #45a049;
+        }
+        .test-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #2a2a2a;
+            border: 1px solid #444;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.error {
+            background: #f44336;
+            color: white;
+        }
+        .status.warning {
+            background: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎯 Enhanced Zoom System Test</h1>
+        
+        <div id="status" class="status warning">
+            Testing zoom system functionality...
+        </div>
+        
+        <h2>🔧 Zoom Controls Test</h2>
+        <button class="test-button" onclick="testZoomIn()">Zoom In</button>
+        <button class="test-button" onclick="testZoomOut()">Zoom Out</button>
+        <button class="test-button" onclick="testFitToView()">Fit to View</button>
+        
+        <h2>🎨 View Presets Test</h2>
+        <button class="test-button" onclick="testSetView('iso')">Isometric</button>
+        <button class="test-button" onclick="testSetView('top')">Top View</button>
+        <button class="test-button" onclick="testSetView('front')">Front View</button>
+        <button class="test-button" onclick="testSetView('side')">Side View</button>
+        
+        <h2>🔍 Function Availability Test</h2>
+        <button class="test-button" onclick="testFunctionAvailability()">Check Functions</button>
+        
+        <h2>📊 Test Log</h2>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            logElement.innerHTML += logEntry + '<br>';
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(logEntry);
+        }
+
+        function updateStatus(message, type = 'warning') {
+            const statusElement = document.getElementById('status');
+            statusElement.textContent = message;
+            statusElement.className = `status ${type}`;
+        }
+
+        function testZoomIn() {
+            log('Testing zoom in functionality...');
+            if (window.controlsRef && window.controlsRef.current) {
+                const controls = window.controlsRef.current;
+                const camera = controls.object;
+                const target = controls.target;
+                const distance = camera.position.distanceTo(target);
+                log(`Current distance: ${distance.toFixed(2)}`);
+                
+                // Test zoom in
+                const direction = camera.position.clone().sub(target).normalize();
+                const newDistance = Math.max(0.1, distance * 0.8);
+                camera.position.copy(target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+                
+                log(`Zoomed in to distance: ${newDistance.toFixed(2)}`, 'success');
+                updateStatus('Zoom in test completed successfully!', 'success');
+            } else {
+                log('Controls not available for zoom test', 'error');
+                updateStatus('Zoom test failed - controls not available', 'error');
+            }
+        }
+
+        function testZoomOut() {
+            log('Testing zoom out functionality...');
+            if (window.controlsRef && window.controlsRef.current) {
+                const controls = window.controlsRef.current;
+                const camera = controls.object;
+                const target = controls.target;
+                const distance = camera.position.distanceTo(target);
+                log(`Current distance: ${distance.toFixed(2)}`);
+                
+                // Test zoom out
+                const direction = camera.position.clone().sub(target).normalize();
+                const newDistance = distance * 1.25;
+                camera.position.copy(target).add(direction.multiplyScalar(newDistance));
+                controls.update();
+                
+                log(`Zoomed out to distance: ${newDistance.toFixed(2)}`, 'success');
+                updateStatus('Zoom out test completed successfully!', 'success');
+            } else {
+                log('Controls not available for zoom test', 'error');
+                updateStatus('Zoom test failed - controls not available', 'error');
+            }
+        }
+
+        function testFitToView() {
+            log('Testing fit to view functionality...');
+            if (window.fitToView && typeof window.fitToView === 'function') {
+                try {
+                    window.fitToView();
+                    log('Fit to view function called successfully', 'success');
+                    updateStatus('Fit to view test completed successfully!', 'success');
+                } catch (error) {
+                    log(`Fit to view error: ${error.message}`, 'error');
+                    updateStatus('Fit to view test failed', 'error');
+                }
+            } else {
+                log('Fit to view function not available', 'error');
+                updateStatus('Fit to view test failed - function not available', 'error');
+            }
+        }
+
+        function testSetView(view) {
+            log(`Testing set view functionality for: ${view}`);
+            if (window.setView && typeof window.setView === 'function') {
+                try {
+                    window.setView(view);
+                    log(`Set view to ${view} successfully`, 'success');
+                    updateStatus(`Set view test completed for ${view}!`, 'success');
+                } catch (error) {
+                    log(`Set view error: ${error.message}`, 'error');
+                    updateStatus('Set view test failed', 'error');
+                }
+            } else {
+                log('Set view function not available', 'error');
+                updateStatus('Set view test failed - function not available', 'error');
+            }
+        }
+
+        function testFunctionAvailability() {
+            log('Testing function availability...');
+            
+            const functions = {
+                'controlsRef': window.controlsRef,
+                'fitToView': window.fitToView,
+                'setView': window.setView
+            };
+            
+            let allAvailable = true;
+            for (const [name, func] of Object.entries(functions)) {
+                if (func) {
+                    log(`${name}: Available`, 'success');
+                } else {
+                    log(`${name}: Not available`, 'error');
+                    allAvailable = false;
+                }
+            }
+            
+            if (allAvailable) {
+                updateStatus('All functions are available!', 'success');
+            } else {
+                updateStatus('Some functions are missing', 'error');
+            }
+        }
+
+        // Auto-test on page load
+        window.addEventListener('load', () => {
+            log('Page loaded, starting auto-test...');
+            setTimeout(() => {
+                testFunctionAvailability();
+            }, 2000);
+        });
+
+        // Monitor for function availability
+        setInterval(() => {
+            if (window.fitToView && window.setView && window.controlsRef) {
+                updateStatus('All zoom functions are ready!', 'success');
+            }
+        }, 1000);
+    </script>
+</body>
+</html> 
